@@ -1,0 +1,12 @@
+[package]
+name = "framework"
+version = "0.1.0"
+authors = ["darkstalker <slayerbeast@gmail.com>"]
+
+[features]
+default = ["image"]
+
+[dependencies]
+custom_gl = { path = "../custom_gl" }
+glutin = { version = "0.6.1", optional = true }
+image = { version = "0.10.3", optional = true }

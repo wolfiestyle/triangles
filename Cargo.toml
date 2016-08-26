@@ -1,0 +1,10 @@
+[package]
+name = "triangles"
+version = "0.1.0"
+authors = ["darkstalker <slayerbeast@gmail.com>"]
+
+[dependencies]
+custom_gl = { path = "custom_gl" }
+framework = { path = "framework", features = ["glutin"] }
+rand = "0.3.14"
+argparse = "0.2.1"
