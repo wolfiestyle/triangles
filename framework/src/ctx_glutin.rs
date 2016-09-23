@@ -9,7 +9,6 @@ pub fn create_window(width: u32, height: u32, title: &str) -> Result<glutin::Win
         .with_title(title)
         .with_gl(glutin::GlRequest::Specific(glutin::Api::OpenGl, (4, 5)))
         .with_gl_profile(glutin::GlProfile::Core)
-        .with_gl_robustness(glutin::Robustness::RobustNoResetNotification)
         .build()
 }
 
