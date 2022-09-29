@@ -21,4 +21,5 @@ Optional arguments:
                         Number of triangles in approximation
   -d,--draw-interval DRAW_INTERVAL
                         Display the result after N iterations
+  -o,--output OUTPUT    Output image filename (saved on exit)
 ```

@@ -273,6 +273,7 @@ fn vec4_div(a: [f32; 4], b: f32) -> [f32; 4] {
 
 fn main() {
     let mut image_file = String::new();
+    let mut output_file = String::new();
     let mut tex_size = 256;
     let mut n_tris = 100;
     let mut draw_interval = 1000;
@@ -294,6 +295,9 @@ fn main() {
         parser
             .refer(&mut draw_interval)
             .add_option(&["-d", "--draw-interval"], Store, "Display the result after N iterations");
+        parser
+            .refer(&mut output_file)
+            .add_option(&["-o", "--output"], Store, "Output image filename (saved on exit)");
         parser.parse_args_or_exit()
     }
 
@@ -411,6 +415,16 @@ fn main() {
             gl_state.fbo.get_tex().bind_to(0);
             texdraw.draw(0);
             window.context.swap_buffers().unwrap();
+        }
+        Event::LoopDestroyed => {
+            if !output_file.is_empty() {
+                let tex = gl_state.fbo.get_tex();
+                tex.bind_to(0);
+                let path = std::path::Path::new(&output_file);
+                //FIXME: image is not saved in the correct color space
+                let img_data: Vec<u8> = tex.read_data(gl::RGBA).unwrap();
+                image::save_buffer(path, &img_data, tex.get_width(), tex.get_height(), image::ColorType::Rgba8).unwrap();
+            }
         }
         _ => (),
     });
