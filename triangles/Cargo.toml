@@ -8,6 +8,6 @@ edition = "2021"
 gl = { package = "custom_gl", path = "../custom_gl" }
 fw = { package = "framework", path = "../framework", features = ["glutin"] }
 rand = "0.8.5"
-argparse = "0.2.1"
+argparse = "0.2.2"
 glutin = { version = "0.29.1" }
 image = { version = "0.24.4" }
