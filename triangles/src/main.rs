@@ -29,7 +29,8 @@ const ELEMS_PER_VERT: usize = 6;
 impl TriangleBuf {
     fn random(n_tris: usize) -> Self {
         let n_elems = n_tris * 3 * ELEMS_PER_VERT;
-        let data: Vec<_> = rand::thread_rng().gen_iter().take(n_elems).collect();
+        let mut rng = rand::thread_rng();
+        let data: Vec<f32> = (0..n_elems).map(|_| rng.gen()).collect();
         let vbo = Buffer::new(gl::DYNAMIC_DRAW, &data);
         TriangleBuf::from_vbo(vbo)
     }
@@ -74,7 +75,7 @@ impl TriangleBuf {
 
     // mutate a single number in the array
     fn mutate(&self) -> OldState {
-        let elem_id = rand::thread_rng().gen_range(0, self.vbo.len());
+        let elem_id = rand::thread_rng().gen_range(0..self.vbo.len());
         let old_elem = self.vbo.get(elem_id);
         self.vbo.set(elem_id, rand::random());
         self._mse.set(None);
