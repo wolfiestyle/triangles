@@ -1,18 +1,15 @@
-use glutin::window::WindowBuilder;
-use glutin::{ContextBuilder, WindowedContext, PossiblyCurrent};
-use glutin::event_loop::EventLoop;
 use glutin::dpi::PhysicalSize;
+use glutin::event_loop::EventLoop;
+use glutin::window::WindowBuilder;
+use glutin::{ContextBuilder, PossiblyCurrent, WindowedContext};
 
-pub struct GlutinWindow
-{
+pub struct GlutinWindow {
     pub event_loop: EventLoop<()>,
     pub context: WindowedContext<PossiblyCurrent>,
 }
 
-impl GlutinWindow
-{
-    pub fn new(width: u32, height: u32, title: &str) -> Self
-    {
+impl GlutinWindow {
+    pub fn new(width: u32, height: u32, title: &str) -> Self {
         let el = EventLoop::new();
 
         let wb = WindowBuilder::new()
@@ -32,10 +29,8 @@ impl GlutinWindow
             context: ctx,
         }
     }
-
 }
 
-pub fn load_gl_from(window: &GlutinWindow)
-{
+pub fn load_gl_from(window: &GlutinWindow) {
     gl::load_with(|symbol| window.context.get_proc_address(symbol) as *const _);
 }
