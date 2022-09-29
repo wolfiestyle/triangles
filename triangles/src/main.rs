@@ -353,8 +353,10 @@ fn main() {
     let mut best_mse = state.calc_mse(&gl_state);
     let mut iters = 0;
 
-    let mut frame_time = Instant::now();
+    let start_time = Instant::now();
+    let mut frame_time = start_time.clone();
     let mut frame_count = 0;
+    let mut frame_total = 0;
 
     window.event_loop.run(move |ev, _, cf| match ev {
         Event::WindowEvent {
@@ -383,9 +385,14 @@ fn main() {
             }
 
             frame_count += 1;
-            let elapsed = frame_time.elapsed();
-            if elapsed.as_secs() >= 1 {
-                eprint!("\r{} iters in {:?}\terror: {:?}        ", frame_count, elapsed, best_mse);
+            frame_total += 1;
+            let elapsed_sec = frame_time.elapsed();
+            let elapsed_total = start_time.elapsed();
+            if elapsed_sec.as_secs() >= 1 {
+                eprint!(
+                    "\r{} iters in {:?} ({} iters/s) error: {:?}        ",
+                    frame_total, elapsed_total, frame_count, best_mse
+                );
                 io::stdout().flush().unwrap();
 
                 frame_count = 0;
