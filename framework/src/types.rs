@@ -1,76 +1,30 @@
 use gl::types::*;
 
+macro_rules! impl_gltype {
+    ($rust:ty, $gl:expr) => {
+        impl GlType for $rust {
+            fn get_gl_type() -> GLenum {
+                $gl
+            }
+        }
+    };
+}
+
 // mapping from rust type => opengl type enum
 pub trait GlType {
     fn get_gl_type() -> GLenum;
 }
 
-impl GlType for i8 {
-    fn get_gl_type() -> GLenum {
-        gl::BYTE
-    }
-}
-impl GlType for u8 {
-    fn get_gl_type() -> GLenum {
-        gl::UNSIGNED_BYTE
-    }
-}
-impl GlType for i16 {
-    fn get_gl_type() -> GLenum {
-        gl::SHORT
-    }
-}
-impl GlType for u16 {
-    fn get_gl_type() -> GLenum {
-        gl::UNSIGNED_SHORT
-    }
-}
-impl GlType for i32 {
-    fn get_gl_type() -> GLenum {
-        gl::INT
-    }
-}
-impl GlType for u32 {
-    fn get_gl_type() -> GLenum {
-        gl::UNSIGNED_INT
-    }
-}
-impl GlType for f32 {
-    fn get_gl_type() -> GLenum {
-        gl::FLOAT
-    }
-}
-impl GlType for f64 {
-    fn get_gl_type() -> GLenum {
-        gl::DOUBLE
-    }
-}
+impl_gltype!(i8, gl::BYTE);
+impl_gltype!(u8, gl::UNSIGNED_BYTE);
+impl_gltype!(i16, gl::SHORT);
+impl_gltype!(u16, gl::UNSIGNED_SHORT);
+impl_gltype!(i32, gl::INT);
+impl_gltype!(u32, gl::UNSIGNED_INT);
+impl_gltype!(f32, gl::FLOAT);
+impl_gltype!(f64, gl::DOUBLE);
 
-impl<T> GlType for [T; 1]
-where
-    T: GlType,
-{
-    fn get_gl_type() -> GLenum {
-        T::get_gl_type()
-    }
-}
-impl<T> GlType for [T; 2]
-where
-    T: GlType,
-{
-    fn get_gl_type() -> GLenum {
-        T::get_gl_type()
-    }
-}
-impl<T> GlType for [T; 3]
-where
-    T: GlType,
-{
-    fn get_gl_type() -> GLenum {
-        T::get_gl_type()
-    }
-}
-impl<T> GlType for [T; 4]
+impl<T, const N: usize> GlType for [T; N]
 where
     T: GlType,
 {
