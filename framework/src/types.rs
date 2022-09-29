@@ -58,3 +58,21 @@ impl UniformValue for u32 {
         gl::ProgramUniform1ui(prog, loc, self);
     }
 }
+
+// returns the number of components of a pixel format
+pub fn pixel_format_components(format: GLenum) -> usize {
+    match format {
+        gl::STENCIL_INDEX
+        | gl::DEPTH_COMPONENT
+        | gl::RED
+        | gl::GREEN
+        | gl::BLUE
+        | gl::RED_INTEGER
+        | gl::GREEN_INTEGER
+        | gl::BLUE_INTEGER => 1,
+        gl::DEPTH_STENCIL | gl::RG | gl::RG_INTEGER => 2,
+        gl::RGB | gl::BGR | gl::RGB_INTEGER | gl::BGR_INTEGER => 3,
+        gl::RGBA | gl::BGRA | gl::RGBA_INTEGER | gl::BGRA_INTEGER => 4,
+        _ => panic!("invalid pixel format"),
+    }
+}

@@ -1,4 +1,4 @@
-use crate::types::{GlType, UniformValue};
+use crate::types::{pixel_format_components, GlType, UniformValue};
 use gl::types::*;
 use std::marker::PhantomData;
 use std::mem;
@@ -68,7 +68,7 @@ impl Texture2d {
     where
         T: Default + Clone,
     {
-        let n_elems = self.width as usize * self.height as usize;
+        let n_elems = self.width as usize * self.height as usize * pixel_format_components(format);
         let size = n_elems * mem::size_of::<T>();
         let buf = vec![T::default(); n_elems];
         let err = unsafe {
