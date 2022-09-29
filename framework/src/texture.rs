@@ -1,12 +1,11 @@
-use gl;
-use gl::types::*;
 use std::mem;
 use std::marker::PhantomData;
 use std::ops::Deref;
-use types::{GlType, UniformValue};
+use gl::types::*;
+use crate::types::{GlType, UniformValue};
 
 #[cfg(feature = "image")]
-use image::{self, GenericImage};
+use image::GenericImage;
 
 #[derive(Debug)]
 pub struct Texture2d

@@ -2,9 +2,12 @@
 name = "triangles"
 version = "0.1.0"
 authors = ["wolfiestyle <slayerbeast@gmail.com>"]
+edition = "2021"
 
 [dependencies]
-custom_gl = { path = "../custom_gl" }
-framework = { path = "../framework", features = ["glutin"] }
+gl = { package = "custom_gl", path = "../custom_gl" }
+fw = { package = "framework", path = "../framework", features = ["glutin"] }
 rand = "0.3.14"
 argparse = "0.2.1"
+glutin = { version = "0.6.1" }
+image = { version = "0.10.3" }

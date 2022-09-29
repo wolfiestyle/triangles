@@ -1,9 +1,8 @@
-use gl;
-use gl::types::*;
 use std::io::{self, Write};
 use std::ptr;
 use std::ffi::CString;
-use types::UniformValue;
+use gl::types::*;
+use crate::types::UniformValue;
 
 // shader/program validation
 trait ShaderStatus

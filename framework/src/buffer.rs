@@ -3,15 +3,14 @@ use std::ptr;
 use std::marker::PhantomData;
 use std::rc::Rc;
 use std::collections::HashMap;
-use gl;
 use gl::types::*;
-use types::GlType;
+use crate::types::GlType;
 
 // vertex array object
 pub struct VertexArray
 {
     id: GLuint,
-    refs: HashMap<u32, Rc<BufferAny>>,  // we need this to own the buffers
+    refs: HashMap<u32, Rc<dyn BufferAny>>,  // we need this to own the buffers
 }
 
 impl VertexArray

@@ -1,4 +1,3 @@
-use gl;
 use gl::types::*;
 
 // mapping from rust type => opengl type enum

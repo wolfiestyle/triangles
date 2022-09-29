@@ -207,7 +207,7 @@ dependencies = [
 name = "custom_gl"
 version = "0.1.0"
 dependencies = [
- "gl_generator",
+ "gl_generator 0.14.0",
 ]
 
 [[package]]
@@ -312,9 +312,20 @@ version = "0.5.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e7acbf2ba3d52e9e1ad96a84362129e9c1aa0af55ebfc86a91004e1b83eca61c"
 dependencies = [
- "khronos_api",
+ "khronos_api 1.0.1",
  "log 0.3.9",
  "xml-rs 0.6.1",
+]
+
+[[package]]
+name = "gl_generator"
+version = "0.14.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1a95dfc23a2b4a9a2f5ab41d194f8bfda3cabec42af4e39f08c339eb2a0c124d"
+dependencies = [
+ "khronos_api 3.1.0",
+ "log 0.4.17",
+ "xml-rs 0.8.4",
 ]
 
 [[package]]
@@ -323,7 +334,7 @@ version = "0.2.32"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9590e0e578d528a080c5abac678e7efbe349a73c7316faafd4073edf5f462d01"
 dependencies = [
- "gl_generator",
+ "gl_generator 0.5.5",
  "pkg-config",
 ]
 
@@ -346,7 +357,7 @@ dependencies = [
  "core-graphics",
  "dwmapi-sys",
  "gdi32-sys",
- "gl_generator",
+ "gl_generator 0.5.5",
  "kernel32-sys",
  "lazy_static 0.2.11",
  "libc",
@@ -425,6 +436,12 @@ name = "khronos_api"
 version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d5a08e2a31d665af8f1ca437eab6d00a93c9d62a549f73f9ed8fc2e55b5a91a7"
+
+[[package]]
+name = "khronos_api"
+version = "3.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e2db585e1d738fc771bf08a151420d3ed193d9d895a36df7f6f8a9456b911ddc"
 
 [[package]]
 name = "lazy_static"
@@ -940,6 +957,8 @@ dependencies = [
  "argparse",
  "custom_gl",
  "framework",
+ "glutin",
+ "image",
  "rand 0.3.23",
 ]
 
@@ -1072,3 +1091,9 @@ checksum = "e1945e12e16b951721d7976520b0832496ef79c31602c7a29d950de79ba74621"
 dependencies = [
  "bitflags 0.9.1",
 ]
+
+[[package]]
+name = "xml-rs"
+version = "0.8.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d2d7d3948613f75c98fd9328cfdcc45acc4d360655289d0a7d4ec931392200a3"

@@ -1,6 +1,3 @@
-use gl;
-use glutin;
-
 // creates opengl context
 pub fn create_window(width: u32, height: u32, title: &str) -> Result<glutin::Window, glutin::CreationError>
 {

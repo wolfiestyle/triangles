@@ -1,14 +1,8 @@
-extern crate framework as fw;
-extern crate custom_gl as gl;
-extern crate rand;
-extern crate argparse;
-
 use std::collections::HashMap;
 use std::rc::Rc;
 use std::cell::{Cell, RefCell};
 use std::time::Instant;
 use std::fmt::Debug;
-use fw::{glutin, image};
 use fw::{Texture2d, VertexArray, Buffer, Framebuffer, TexFramebuffer, Shader, Program, UniformValue};
 use rand::Rng;
 
