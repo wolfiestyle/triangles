@@ -4,7 +4,7 @@ layout (local_size_x = 16, local_size_y = 16) in;
 uniform sampler2D src;
 uniform writeonly restrict image2D dest;
 
-const uint tid = gl_LocalInvocationIndex;
+#define tid gl_LocalInvocationIndex
 const uint block_size = gl_WorkGroupSize.x * gl_WorkGroupSize.y;
 
 shared vec4 sdata[block_size];
