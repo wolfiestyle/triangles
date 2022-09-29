@@ -2,64 +2,66 @@ use std::collections::HashMap;
 use std::rc::Rc;
 use std::cell::{Cell, RefCell};
 use std::time::Instant;
-use std::fmt::Debug;
+use std::io::{self, Write};
 use fw::{Texture2d, VertexArray, Buffer, Framebuffer, TexFramebuffer, Shader, Program, UniformValue};
 use rand::Rng;
+use glutin::event::{Event, ElementState, VirtualKeyCode, WindowEvent, KeyboardInput};
+use glutin::event_loop::ControlFlow;
 
-struct SharedStuff<'a>
+// shared GL state
+struct GlState
 {
     tex_img: Texture2d,
     program: Program,
-    fbo: TexFramebuffer<'a>,
+    fbo: TexFramebuffer,
     mse: TexMse,
 }
 
 // buffer with random triangles
-struct TriangleBuf<'a>
+struct TriangleBuf
 {
     vao: VertexArray,
     vbo: Rc<Buffer<f32>>,
     n_verts: usize,
-    s: &'a SharedStuff<'a>,
     _mse: Cell<Option<f32>>,
 }
 
 const ELEMS_PER_VERT: usize = 6;
 
-impl<'a> TriangleBuf<'a>
+impl TriangleBuf
 {
-    fn random(n_tris: usize, stuff: &'a SharedStuff) -> Self
+    fn random(n_tris: usize) -> Self
     {
         let n_elems = n_tris * 3 * ELEMS_PER_VERT;
         let data: Vec<_> = rand::thread_rng().gen_iter().take(n_elems).collect();
         let vbo = Buffer::new(gl::DYNAMIC_DRAW, &data);
-        TriangleBuf::from_vbo(vbo, stuff)
+        TriangleBuf::from_vbo(vbo)
     }
 
-    fn from_vbo(vbo: Buffer<f32>, stuff: &'a SharedStuff) -> Self
+    fn from_vbo(vbo: Buffer<f32>) -> Self
     {
         let mut vao = VertexArray::new();
         let n_verts = vbo.len() / ELEMS_PER_VERT;
         let vbo_rc = Rc::new(vbo);
         vao.set_attribute(0, vbo_rc.clone(), 2, 0, ELEMS_PER_VERT);  // position: vec2
         vao.set_attribute(1, vbo_rc.clone(), 4, 2, ELEMS_PER_VERT);  // color: vec4
-        TriangleBuf{ vao: vao, vbo: vbo_rc, n_verts: n_verts, s: stuff, _mse: Cell::new(None) }
+        TriangleBuf{ vao: vao, vbo: vbo_rc, n_verts: n_verts, _mse: Cell::new(None) }
     }
 
-    fn draw(&self)
+    fn draw(&self, gl_state: &GlState)
     {
         unsafe
         {
             gl::Clear(gl::COLOR_BUFFER_BIT);
             gl::Enable(gl::BLEND);
         }
-        self.s.program.set_active();
+        gl_state.program.set_active();
         self.vao.draw(gl::TRIANGLES, 0, self.n_verts as u32);
         unsafe { gl::Disable(gl::BLEND) };
     }
 
     // evaluated more than once, so we need to cache this
-    fn calc_mse(&self) -> f32
+    fn calc_mse(&self, gl_state: &GlState) -> f32
     {
         if let Some(val) = self._mse.get()
         {
@@ -67,10 +69,10 @@ impl<'a> TriangleBuf<'a>
         }
         else
         {
-            self.s.fbo.bind();
+            gl_state.fbo.bind();
             //unsafe{ gl::Viewport(0, 0, TEX_SIZE as i32, TEX_SIZE as i32) };
-            self.draw();
-            let val = self.s.mse.run(&self.s.tex_img, self.s.fbo.get_tex());
+            self.draw(&gl_state);
+            let val = gl_state.mse.run(&gl_state.tex_img, gl_state.fbo.get_tex());
             self._mse.set(Some(val));
             val
         }
@@ -284,27 +286,6 @@ impl TexMse
     }
 }
 
-fn benchmark<T, F>(mut test_f: F)
-    where T: Debug, F: FnMut() -> Option<T>
-{
-    let mut frame_time = Instant::now();
-    let mut frame_count = 0;
-
-    while let Some(val) = test_f()
-    {
-        frame_count += 1;
-
-        let elapsed = frame_time.elapsed();
-        if elapsed.as_secs() >= 1
-        {
-            println!("{} iters in {:?}\n--value: {:?}", frame_count, elapsed, val);
-
-            frame_count = 0;
-            frame_time = Instant::now();
-        }
-    }
-}
-
 // maybe i should use a math library
 fn vec4_add(a: [f32; 4], b: [f32; 4]) -> [f32; 4]
 {
@@ -345,7 +326,7 @@ fn main()
     let img = image::open(image_file).unwrap();
 
     // init opengl context
-    let window = fw::ctx_glutin::create_window(tex_size, tex_size, "triangles").unwrap();
+    let window = fw::ctx_glutin::GlutinWindow::new(tex_size, tex_size, "triangles");
     fw::ctx_glutin::load_gl_from(&window);
     //fw::enable_debug_callback();
 
@@ -367,7 +348,7 @@ fn main()
 
     // draw to texture setup
     let fb_tex = Texture2d::new(tex_size, tex_size, gl::RGBA8);
-    let fbo = fb_tex.as_framebuffer().unwrap();
+    let fbo = fb_tex.into_framebuffer().unwrap();
 
     // init compute operations
     let texmse = TexMse::new(tex_size, tex_size);
@@ -378,7 +359,7 @@ fn main()
     println!("average color: {:?}", avg_color);
 
     // put all of the above in a struct
-    let stuff = SharedStuff{
+    let gl_state = GlState{
         tex_img: tex_img,
         program: prog_tris,
         fbo: fbo,
@@ -388,42 +369,65 @@ fn main()
     // for displaying the results
     let texdraw = TexDraw::new();
 
-    let state = TriangleBuf::random(n_tris, &stuff);
-    let mut best_mse = state.calc_mse();
+    let state = TriangleBuf::random(n_tris);
+    let mut best_mse = state.calc_mse(&gl_state);
     let mut iters = 0;
 
-    benchmark(|| {
-        let old_state = state.mutate();
-        let mse = state.calc_mse();
+    let mut frame_time = Instant::now();
+    let mut frame_count = 0;
 
-        if mse < best_mse
-        {
-            best_mse = mse;
-        }
-        else
-        {
-            state.revert(old_state);
-        }
-
-        if iters >= draw_interval
-        {
-            iters = 0;
-            stuff.fbo.get_tex().bind_to(0);
-            texdraw.draw(0);
-            window.swap_buffers().unwrap();
-
-            for ev in window.poll_events()
-            {
-                match ev
+    window.event_loop.run(move |ev, _, cf| {
+        match ev {
+            Event::WindowEvent{
+                event: WindowEvent::KeyboardInput{
+                    input: KeyboardInput {
+                        state: ElementState::Pressed,
+                        virtual_keycode: Some(VirtualKeyCode::Escape),
+                        ..
+                    },
+                    ..
+                } | WindowEvent::CloseRequested,
+                ..
+            } => {
+                *cf = ControlFlow::ExitWithCode(0);
+            }
+            Event::MainEventsCleared => {
+                let old_state = state.mutate();
+                let mse = state.calc_mse(&gl_state);
+                if mse < best_mse
                 {
-                    glutin::Event::KeyboardInput(glutin::ElementState::Pressed, _, Some(glutin::VirtualKeyCode::Escape)) => return None,
-                    glutin::Event::Closed => return None,
-                    _ => ()
+                    best_mse = mse;
+                }
+                else
+                {
+                    state.revert(old_state);
+                }
+
+                frame_count += 1;
+                let elapsed = frame_time.elapsed();
+                if elapsed.as_secs() >= 1
+                {
+                    eprint!("\r{} iters in {:?}\terror: {:?}        ", frame_count, elapsed, best_mse);
+                    io::stdout().flush().unwrap();
+
+                    frame_count = 0;
+                    frame_time = Instant::now();
+                }
+
+                if iters > draw_interval {
+                    iters = 0;
+                    window.context.window().request_redraw();
+                } else {
+                    iters += 1;
                 }
             }
+            Event::RedrawRequested(_) => {
+                iters = 0;
+                gl_state.fbo.get_tex().bind_to(0);
+                texdraw.draw(0);
+                window.context.swap_buffers().unwrap();
+            }
+            _ => ()
         }
-        else { iters += 1 }
-
-        Some(best_mse)
     });
 }

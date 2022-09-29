@@ -1,19 +1,41 @@
-// creates opengl context
-pub fn create_window(width: u32, height: u32, title: &str) -> Result<glutin::Window, glutin::CreationError>
+use glutin::window::WindowBuilder;
+use glutin::{ContextBuilder, WindowedContext, PossiblyCurrent};
+use glutin::event_loop::EventLoop;
+use glutin::dpi::PhysicalSize;
+
+pub struct GlutinWindow
 {
-    glutin::WindowBuilder::new()
-        .with_dimensions(width, height)
-        .with_title(title)
-        .with_gl(glutin::GlRequest::Specific(glutin::Api::OpenGl, (4, 5)))
-        .with_gl_profile(glutin::GlProfile::Core)
-        .build()
+    pub event_loop: EventLoop<()>,
+    pub context: WindowedContext<PossiblyCurrent>,
 }
 
-pub fn load_gl_from<T: glutin::GlContext>(context: &T)
+impl GlutinWindow
 {
-    unsafe
+    pub fn new(width: u32, height: u32, title: &str) -> Self
     {
-        context.make_current().unwrap();
-        gl::load_with(|symbol| context.get_proc_address(symbol) as *const _);
+        let el = EventLoop::new();
+
+        let wb = WindowBuilder::new()
+            .with_inner_size(PhysicalSize::new(width, height))
+            .with_title(title);
+
+        let ctx = ContextBuilder::new()
+            .with_gl(glutin::GlRequest::Specific(glutin::Api::OpenGl, (4, 5)))
+            .with_gl_profile(glutin::GlProfile::Core)
+            .build_windowed(wb, &el)
+            .unwrap();
+
+        let ctx = unsafe { ctx.make_current().unwrap() };
+
+        GlutinWindow {
+            event_loop: el,
+            context: ctx,
+        }
     }
+
+}
+
+pub fn load_gl_from(window: &GlutinWindow)
+{
+    gl::load_with(|symbol| window.context.get_proc_address(symbol) as *const _);
 }

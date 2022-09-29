@@ -5,7 +5,7 @@ use gl::types::*;
 use crate::types::{GlType, UniformValue};
 
 #[cfg(feature = "image")]
-use image::GenericImage;
+use image::{GenericImageView, imageops::FilterType};
 
 #[derive(Debug)]
 pub struct Texture2d
@@ -33,7 +33,7 @@ impl Texture2d
     {
         let (width, height) = image.dimensions();
         let tex = Texture2d::new(width, height, int_format);
-        tex.load_data(0, 0, width, height, gl::RGBA, &image.to_rgba().into_raw());
+        tex.load_data(0, 0, width, height, gl::RGBA, image.into_rgba8().as_raw());
         tex
     }
 
@@ -43,10 +43,10 @@ impl Texture2d
         let dims = image.dimensions();
         let resized = if dims != (self.width, self.height)
         {
-            image.resize_exact(self.width, self.height, image::FilterType::Lanczos3)
+            image.resize_exact(self.width, self.height, FilterType::Lanczos3)
         }
         else { image };
-        self.load_data(0, 0, self.width, self.height, gl::RGBA, &resized.to_rgba().into_raw());
+        self.load_data(0, 0, self.width, self.height, gl::RGBA, resized.into_rgba8().as_raw());
     }
 
     pub fn load_data<T: GlType>(&self, x: i32, y: i32, width: u32, height: u32, pix_format: GLenum, data: &[T])
@@ -117,10 +117,10 @@ impl Texture2d
         }
     }
 
-    pub fn as_framebuffer(&self) -> Result<TexFramebuffer, String>
+    pub fn into_framebuffer(self) -> Result<TexFramebuffer, String>
     {
         let fbo = Framebuffer::new();
-        fbo.attach_texture(gl::COLOR_ATTACHMENT0, self);
+        fbo.attach_texture(gl::COLOR_ATTACHMENT0, &self);
         fbo.bind_locations(&[gl::COLOR_ATTACHMENT0]);
         fbo.validate().and(Ok(TexFramebuffer{ fbo: fbo, tex: self }))
     }
@@ -246,23 +246,22 @@ impl Drop for Framebuffer
 }
 
 // framebuffer bound to a single texture
-//FIXME: Framebuffer should link the texture via lifetime, then we don't need this
 #[derive(Debug)]
-pub struct TexFramebuffer<'a>
+pub struct TexFramebuffer
 {
     fbo: Framebuffer,
-    tex: &'a Texture2d,
+    tex: Texture2d,
 }
 
-impl<'a> TexFramebuffer<'a>
+impl TexFramebuffer
 {
     pub fn get_tex(&self) -> &Texture2d
     {
-        self.tex
+        &self.tex
     }
 }
 
-impl<'a> Deref for TexFramebuffer<'a>
+impl Deref for TexFramebuffer
 {
     type Target = Framebuffer;
 
