@@ -47,9 +47,11 @@ impl Texture2d {
     }
 
     pub fn load_data<T: GlType>(&self, x: i32, y: i32, width: u32, height: u32, pix_format: GLenum, data: &[T]) {
+        let fmt_components = pixel_format_components(pix_format);
+        assert_eq!(fmt_components % T::num_components(), 0);
+        let elem_per_pix = fmt_components / T::num_components();
         assert_eq!(
-            // here T is a single color component (like u8)
-            width as usize * height as usize * pixel_format_components(pix_format) * mem::size_of::<T>(),
+            width as usize * height as usize * elem_per_pix * mem::size_of::<T>(),
             mem::size_of_val(data)
         );
         unsafe {
