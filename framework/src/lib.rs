@@ -33,3 +33,18 @@ pub fn enable_debug_callback() {
         gl::Enable(gl::DEBUG_OUTPUT_SYNCHRONOUS);
     }
 }
+
+pub fn get_error_str() -> Option<&'static str> {
+    let err = unsafe { gl::GetError() };
+    Some(match err {
+        gl::NO_ERROR => return None,
+        gl::INVALID_ENUM => "GL_INVALID_ENUM",
+        gl::INVALID_VALUE => "GL_INVALID_VALUE",
+        gl::INVALID_OPERATION => "GL_INVALID_OPERATION",
+        gl::INVALID_FRAMEBUFFER_OPERATION => "GL_INVALID_FRAMEBUFFER_OPERATION",
+        gl::OUT_OF_MEMORY => "GL_OUT_OF_MEMORY",
+        gl::STACK_UNDERFLOW => "GL_STACK_UNDERFLOW",
+        gl::STACK_OVERFLOW => "GL_STACK_OVERFLOW",
+        _ => "(unknown)",
+    })
+}
