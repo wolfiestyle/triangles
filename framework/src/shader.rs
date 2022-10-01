@@ -18,18 +18,6 @@ fn validate_shader<T: ShaderStatus>(shader: T) -> Result<T, CString> {
     }
 }
 
-fn get_shader_log(id: GLuint) -> Option<CString> {
-    let mut log_len = 0;
-    unsafe { gl::GetShaderiv(id, gl::INFO_LOG_LENGTH, &mut log_len) };
-    if log_len > 0 {
-        let mut log_buff = vec![0u8; log_len as usize];
-        unsafe { gl::GetShaderInfoLog(id, log_len, ptr::null_mut(), log_buff.as_mut_ptr() as *mut _) };
-        Some(CString::from_vec_with_nul(log_buff).unwrap())
-    } else {
-        None
-    }
-}
-
 // shader object
 #[derive(Debug)]
 pub struct Shader(GLuint);
@@ -56,7 +44,15 @@ impl ShaderStatus for Shader {
     }
 
     fn get_log(&self) -> Option<CString> {
-        get_shader_log(self.0)
+        let mut log_len = 0;
+        unsafe { gl::GetShaderiv(self.0, gl::INFO_LOG_LENGTH, &mut log_len) };
+        if log_len > 0 {
+            let mut log_buff = vec![0u8; log_len as usize];
+            unsafe { gl::GetShaderInfoLog(self.0, log_len, ptr::null_mut(), log_buff.as_mut_ptr() as *mut _) };
+            Some(CString::from_vec_with_nul(log_buff).unwrap())
+        } else {
+            None
+        }
     }
 }
 
@@ -110,7 +106,15 @@ impl ShaderStatus for Program {
     }
 
     fn get_log(&self) -> Option<CString> {
-        get_shader_log(self.0)
+        let mut log_len = 0;
+        unsafe { gl::GetProgramiv(self.0, gl::INFO_LOG_LENGTH, &mut log_len) };
+        if log_len > 0 {
+            let mut log_buff = vec![0u8; log_len as usize];
+            unsafe { gl::GetProgramInfoLog(self.0, log_len, ptr::null_mut(), log_buff.as_mut_ptr() as *mut _) };
+            Some(CString::from_vec_with_nul(log_buff).unwrap())
+        } else {
+            None
+        }
     }
 }
 
