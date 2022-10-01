@@ -71,9 +71,11 @@ impl Texture2d {
     where
         T: Default + Clone,
     {
-        assert_eq!(T::num_components(), pixel_format_components(format));
-        let n_elems = self.width as usize * self.height as usize;
-        let size = n_elems * mem::size_of::<T>(); // here T is the whole pixel (like [u8; 4])
+        let fmt_components = pixel_format_components(format);
+        assert_eq!(fmt_components % T::num_components(), 0);
+        let elem_per_pix = fmt_components / T::num_components();
+        let n_elems = self.width as usize * self.height as usize * elem_per_pix;
+        let size = n_elems * mem::size_of::<T>();
         let mut buf = vec![T::default(); n_elems];
         unsafe {
             gl::GetTextureImage(self.id, 0, format, T::get_gl_type(), size as GLsizei, buf.as_mut_ptr() as *mut _);
