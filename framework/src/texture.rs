@@ -1,4 +1,4 @@
-use crate::types::{pixel_format_components, GlType, UniformValue};
+use crate::types::{GlType, UniformValue};
 use gl::types::*;
 use std::marker::PhantomData;
 use std::mem;
@@ -64,18 +64,13 @@ impl Texture2d {
     where
         T: Default + Clone,
     {
-        let n_elems = self.width as usize * self.height as usize * pixel_format_components(format);
-        let size = n_elems * mem::size_of::<T>();
+        let n_elems = self.width as usize * self.height as usize;
+        let size = n_elems * mem::size_of::<T>(); //T is the whole pixel (like [u8; 4])
         let mut buf = vec![T::default(); n_elems];
-        let err = unsafe {
+        unsafe {
             gl::GetTextureImage(self.id, 0, format, T::get_gl_type(), size as GLsizei, buf.as_mut_ptr() as *mut _);
-            gl::GetError()
-        };
-        if err == gl::NO_ERROR {
-            Ok(buf)
-        } else {
-            Err(format!("read_data: GL error {:x}", err))
         }
+        Ok(buf)
     }
 
     pub fn set_filter(&self, min: GLenum, mag: GLenum) {
