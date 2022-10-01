@@ -6,15 +6,27 @@ use std::ptr;
 // shader/program validation
 trait ShaderStatus {
     fn get_status(&self) -> bool;
-    fn get_log(&self) -> Option<String>;
+    fn get_log(&self) -> Option<CString>;
 }
 
-fn validate_shader<T: ShaderStatus>(shader: T) -> Result<T, String> {
+fn validate_shader<T: ShaderStatus>(shader: T) -> Result<T, CString> {
     if shader.get_status() {
-        shader.get_log().map(|log| eprintln!("-- {}", log));
+        shader.get_log().map(|log| eprintln!("-- {:?}", log));
         Ok(shader)
     } else {
-        Err(shader.get_log().unwrap_or("unk error".into()))
+        Err(shader.get_log().unwrap_or_else(|| CString::new("unknown error").unwrap()))
+    }
+}
+
+fn get_shader_log(id: GLuint) -> Option<CString> {
+    let mut log_len = 0;
+    unsafe { gl::GetShaderiv(id, gl::INFO_LOG_LENGTH, &mut log_len) };
+    if log_len > 0 {
+        let mut log_buff = vec![0u8; log_len as usize];
+        unsafe { gl::GetShaderInfoLog(id, log_len, ptr::null_mut(), log_buff.as_mut_ptr() as *mut _) };
+        Some(CString::from_vec_with_nul(log_buff).unwrap())
+    } else {
+        None
     }
 }
 
@@ -23,7 +35,7 @@ fn validate_shader<T: ShaderStatus>(shader: T) -> Result<T, String> {
 pub struct Shader(GLuint);
 
 impl Shader {
-    pub fn new(ty: GLenum, source: &[&str]) -> Result<Self, String> {
+    pub fn new(ty: GLenum, source: &[&str]) -> Result<Self, CString> {
         unsafe {
             let src: Vec<_> = source.iter().map(|s| s.as_ptr() as *const _).collect();
             let src_len: Vec<_> = source.iter().map(|s| s.len() as GLint).collect();
@@ -43,17 +55,8 @@ impl ShaderStatus for Shader {
         status != 0
     }
 
-    fn get_log(&self) -> Option<String> {
-        let mut log_len = 0;
-        unsafe { gl::GetShaderiv(self.0, gl::INFO_LOG_LENGTH, &mut log_len) };
-        if log_len > 0 {
-            let mut log_buff = vec![0u8; log_len as usize];
-            unsafe { gl::GetShaderInfoLog(self.0, log_len, ptr::null_mut(), log_buff.as_ptr() as *mut _) };
-            log_buff.pop(); // remove trailing 0
-            Some(String::from_utf8(log_buff).unwrap())
-        } else {
-            None
-        }
+    fn get_log(&self) -> Option<CString> {
+        get_shader_log(self.0)
     }
 }
 
@@ -68,7 +71,7 @@ impl Drop for Shader {
 pub struct Program(GLuint);
 
 impl Program {
-    pub fn new(shaders: &[Shader]) -> Result<Program, String> {
+    pub fn new(shaders: &[Shader]) -> Result<Program, CString> {
         unsafe {
             let id = gl::CreateProgram();
 
@@ -106,17 +109,8 @@ impl ShaderStatus for Program {
         status != 0
     }
 
-    fn get_log(&self) -> Option<String> {
-        let mut log_len = 0;
-        unsafe { gl::GetProgramiv(self.0, gl::INFO_LOG_LENGTH, &mut log_len) };
-        if log_len > 0 {
-            let mut log_buff = vec![0u8; log_len as usize];
-            unsafe { gl::GetProgramInfoLog(self.0, log_len, ptr::null_mut(), log_buff.as_ptr() as *mut _) };
-            log_buff.pop(); // remove trailing 0
-            Some(String::from_utf8(log_buff).unwrap())
-        } else {
-            None
-        }
+    fn get_log(&self) -> Option<CString> {
+        get_shader_log(self.0)
     }
 }
 

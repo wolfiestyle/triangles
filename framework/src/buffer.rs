@@ -85,10 +85,10 @@ impl<T> Buffer<T> {
     where
         T: Default + Clone,
     {
-        let buf = vec![T::default(); len];
+        let mut buf = vec![T::default(); len];
         let off_bytes = offset * mem::size_of::<T>();
         let size = len * mem::size_of::<T>();
-        unsafe { gl::GetNamedBufferSubData(self.id, off_bytes as GLintptr, size as GLsizeiptr, buf.as_ptr() as *mut _) };
+        unsafe { gl::GetNamedBufferSubData(self.id, off_bytes as GLintptr, size as GLsizeiptr, buf.as_mut_ptr() as *mut _) };
         buf
     }
 

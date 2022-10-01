@@ -66,9 +66,9 @@ impl Texture2d {
     {
         let n_elems = self.width as usize * self.height as usize * pixel_format_components(format);
         let size = n_elems * mem::size_of::<T>();
-        let buf = vec![T::default(); n_elems];
+        let mut buf = vec![T::default(); n_elems];
         let err = unsafe {
-            gl::GetTextureImage(self.id, 0, format, T::get_gl_type(), size as GLsizei, buf.as_ptr() as *mut _);
+            gl::GetTextureImage(self.id, 0, format, T::get_gl_type(), size as GLsizei, buf.as_mut_ptr() as *mut _);
             gl::GetError()
         };
         if err == gl::NO_ERROR {
