@@ -177,7 +177,7 @@ impl TexFold {
             tex_iter1
         };
 
-        let result_data = tex_out.read_data(gl::RGBA).unwrap();
+        let result_data = tex_out.read_data(gl::RGBA);
 
         // fold the (hopefully) tiny result texture into the final value
         result_data.into_iter().fold([0f32; 4], vec4_add)
@@ -424,7 +424,7 @@ fn main() {
                 tex.bind_to(0);
                 let path = std::path::Path::new(&output_file);
                 //FIXME: image is not saved in the correct color space
-                let img_data: Vec<u8> = tex.read_data(gl::RGBA).unwrap();
+                let img_data: Vec<u8> = tex.read_data(gl::RGBA);
                 image::save_buffer(path, &img_data, tex.get_width(), tex.get_height(), image::ColorType::Rgba8).unwrap();
             }
         }

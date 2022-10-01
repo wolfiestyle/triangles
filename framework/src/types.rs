@@ -6,6 +6,9 @@ macro_rules! impl_gltype {
             fn get_gl_type() -> GLenum {
                 $gl
             }
+            fn num_components() -> usize {
+                1
+            }
         }
     };
 }
@@ -13,6 +16,7 @@ macro_rules! impl_gltype {
 // mapping from rust type => opengl type enum
 pub trait GlType {
     fn get_gl_type() -> GLenum;
+    fn num_components() -> usize;
 }
 
 impl_gltype!(i8, gl::BYTE);
@@ -31,6 +35,10 @@ where
     fn get_gl_type() -> GLenum {
         T::get_gl_type()
     }
+
+    fn num_components() -> usize {
+        N
+    }
 }
 
 impl<'a, T> GlType for &'a T
@@ -39,6 +47,10 @@ where
 {
     fn get_gl_type() -> GLenum {
         T::get_gl_type()
+    }
+
+    fn num_components() -> usize {
+        T::num_components()
     }
 }
 

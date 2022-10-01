@@ -1,4 +1,7 @@
-use crate::types::{GlType, UniformValue};
+use crate::{
+    pixel_format_components,
+    types::{GlType, UniformValue},
+};
 use gl::types::*;
 use std::marker::PhantomData;
 use std::mem;
@@ -44,6 +47,11 @@ impl Texture2d {
     }
 
     pub fn load_data<T: GlType>(&self, x: i32, y: i32, width: u32, height: u32, pix_format: GLenum, data: &[T]) {
+        assert_eq!(
+            // here T is a single color component (like u8)
+            width as usize * height as usize * pixel_format_components(pix_format) * mem::size_of::<T>(),
+            mem::size_of_val(data)
+        );
         unsafe {
             gl::TextureSubImage2D(
                 self.id,
@@ -59,18 +67,18 @@ impl Texture2d {
         };
     }
 
-    //FIXME: there should be a safer way of doing this. maybe storing the size of the internal format
-    pub fn read_data<T: GlType>(&self, format: GLenum) -> Result<Vec<T>, String>
+    pub fn read_data<T: GlType>(&self, format: GLenum) -> Vec<T>
     where
         T: Default + Clone,
     {
+        assert_eq!(T::num_components(), pixel_format_components(format));
         let n_elems = self.width as usize * self.height as usize;
-        let size = n_elems * mem::size_of::<T>(); //T is the whole pixel (like [u8; 4])
+        let size = n_elems * mem::size_of::<T>(); // here T is the whole pixel (like [u8; 4])
         let mut buf = vec![T::default(); n_elems];
         unsafe {
             gl::GetTextureImage(self.id, 0, format, T::get_gl_type(), size as GLsizei, buf.as_mut_ptr() as *mut _);
         }
-        Ok(buf)
+        buf
     }
 
     pub fn set_filter(&self, min: GLenum, mag: GLenum) {
