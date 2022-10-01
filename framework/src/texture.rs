@@ -16,16 +16,12 @@ pub struct Texture2d {
 
 impl Texture2d {
     pub fn new(width: u32, height: u32, int_format: GLenum) -> Self {
+        let mut id = 0;
         unsafe {
-            let mut id = 0;
             gl::CreateTextures(gl::TEXTURE_2D, 1, &mut id);
             gl::TextureStorage2D(id, 1, int_format, width as GLsizei, height as GLsizei);
-            Texture2d {
-                id: id,
-                width: width,
-                height: height,
-            }
         }
+        Texture2d { id, width, height }
     }
 
     #[cfg(feature = "image")]
@@ -109,7 +105,7 @@ impl Texture2d {
         unsafe {
             let handle = gl::GetTextureHandleARB(self.id);
             gl::MakeTextureHandleResidentARB(handle);
-            Bindless { handle: handle, obj: self }
+            Bindless { handle, obj: self }
         }
     }
 
@@ -125,7 +121,7 @@ impl Texture2d {
         let fbo = Framebuffer::new();
         fbo.attach_texture(gl::COLOR_ATTACHMENT0, &self);
         fbo.bind_locations(&[gl::COLOR_ATTACHMENT0]);
-        fbo.validate().and(Ok(TexFramebuffer { fbo: fbo, tex: self }))
+        fbo.validate().and(Ok(TexFramebuffer { fbo, tex: self }))
     }
 }
 

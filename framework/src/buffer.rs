@@ -16,10 +16,7 @@ impl VertexArray {
     pub fn new() -> Self {
         let mut id = 0;
         unsafe { gl::CreateVertexArrays(1, &mut id) };
-        VertexArray {
-            id: id,
-            refs: HashMap::new(),
-        }
+        VertexArray { id, refs: HashMap::new() }
     }
 
     pub fn set_attribute<T: GlType + 'static>(&mut self, attr_id: u32, vbo: Rc<Buffer<T>>, elem_count: u32, offset: usize, stride: usize) {
@@ -52,7 +49,9 @@ pub trait BufferAny {
     fn empty() -> Self
     where
         Self: Sized;
+
     fn alloc_bytes(&mut self, size: usize, usage: GLenum);
+
     fn byte_size(&self) -> usize;
 }
 
@@ -148,7 +147,7 @@ impl<T> BufferAny for Buffer<T> {
             let mut id = 0;
             gl::CreateBuffers(1, &mut id);
             Buffer {
-                id: id,
+                id,
                 size: 0,
                 usage: 0,
                 _t: PhantomData,

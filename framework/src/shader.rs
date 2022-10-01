@@ -1,7 +1,6 @@
 use crate::types::UniformValue;
 use gl::types::*;
 use std::ffi::CString;
-use std::io::{self, Write};
 use std::ptr;
 
 // shader/program validation
@@ -12,7 +11,7 @@ trait ShaderStatus {
 
 fn validate_shader<T: ShaderStatus>(shader: T) -> Result<T, String> {
     if shader.get_status() {
-        shader.get_log().map(|log| writeln!(io::stderr(), "-- {}", log));
+        shader.get_log().map(|log| eprintln!("-- {}", log));
         Ok(shader)
     } else {
         Err(shader.get_log().unwrap_or("unk error".into()))

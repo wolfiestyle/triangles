@@ -42,9 +42,9 @@ impl TriangleBuf {
         vao.set_attribute(0, vbo_rc.clone(), 2, 0, ELEMS_PER_VERT); // position: vec2
         vao.set_attribute(1, vbo_rc.clone(), 4, 2, ELEMS_PER_VERT); // color: vec4
         TriangleBuf {
-            vao: vao,
+            vao,
             vbo: vbo_rc,
-            n_verts: n_verts,
+            n_verts,
             _mse: Cell::new(None),
         }
     }
@@ -115,7 +115,7 @@ impl TexDraw {
         let mut vao = VertexArray::new();
         vao.set_attribute(0, coords, 2, 0, 2);
 
-        TexDraw { vao: vao, program: prog }
+        TexDraw { vao, program: prog }
     }
 
     fn draw<T: UniformValue>(&self, tex: T) {
@@ -344,9 +344,9 @@ fn main() {
 
     // put all of the above in a struct
     let gl_state = GlState {
-        tex_img: tex_img,
+        tex_img,
         program: prog_tris,
-        fbo: fbo,
+        fbo,
         mse: texmse,
     };
 
