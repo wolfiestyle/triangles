@@ -160,22 +160,24 @@ impl TexFold {
 
         let mut wg_x = size_x / wg_size2;
         let mut wg_y = size_y / wg_size2;
+        let mut tex_in = tex_src;
+        let mut tex_out;
 
         self.program.set_active();
 
-        // first iteration
-        let tex_iter1 = self.run_compute(wg_x, wg_y, tex_src);
+        loop {
+            // do an iteration
+            tex_out = self.run_compute(wg_x, wg_y, tex_in);
 
-        // check if it's worth to iterate again
-        // with local_size 16, this will only run if tex_size >= 1024
-        let tex_out = if wg_x % wg_size2 == 0 && wg_y % wg_size2 == 0 {
-            wg_x /= wg_size2;
-            wg_y /= wg_size2;
-
-            self.run_compute(wg_x, wg_y, &tex_iter1)
-        } else {
-            tex_iter1
-        };
+            // check if it's worth to iterate again
+            if wg_x % wg_size2 == 0 && wg_y % wg_size2 == 0 {
+                wg_x /= wg_size2;
+                wg_y /= wg_size2;
+                tex_in = &tex_out;
+            } else {
+                break;
+            }
+        }
 
         let result_data = tex_out.read_data(gl::RGBA);
 
