@@ -29,8 +29,8 @@ impl GlutinWindow {
             context: ctx,
         }
     }
-}
 
-pub fn load_gl_from(window: &GlutinWindow) {
-    gl::load_with(|symbol| window.context.get_proc_address(symbol));
+    pub fn load_gl(&self) {
+        gl::load_with(|symbol| self.context.get_proc_address(symbol));
+    }
 }

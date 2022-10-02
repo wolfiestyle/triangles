@@ -318,7 +318,7 @@ fn main() {
 
     // init opengl context
     let window = fw::ctx_glutin::GlutinWindow::new(tex_size, tex_size, "triangles");
-    fw::ctx_glutin::load_gl_from(&window);
+    window.load_gl();
     if cfg!(debug_assertions) {
         fw::enable_debug_callback();
     }
