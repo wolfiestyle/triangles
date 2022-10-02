@@ -8,6 +8,9 @@ use std::io::{self, Write};
 use std::rc::Rc;
 use std::time::Instant;
 
+const FOLD_WG_SIZE: u32 = 8; // local_size_N from fold shader
+const DSQ_WG_SIZE: u32 = 16; // local_size_N from dsq shader
+
 // shared GL state
 struct GlState {
     tex_img: Texture2d,
@@ -133,8 +136,6 @@ struct TexFold {
     tex_cache: RefCell<HashMap<(u32, u32), Rc<Texture2d>>>,
 }
 
-const WG_SIZE: u32 = 16; // local_size_* from shader
-
 impl TexFold {
     fn new() -> Self {
         let fold_op_src = "vec4 fold_op(vec4 acc, vec4 val) { return acc + val; }";
@@ -151,11 +152,10 @@ impl TexFold {
         let size_x = tex_src.get_width();
         let size_y = tex_src.get_height();
 
-        let wg_size2 = WG_SIZE * 2;
+        let wg_size2 = FOLD_WG_SIZE * 2;
         assert!(
             size_x % wg_size2 == 0 && size_y % wg_size2 == 0,
-            "tex size must be divisible by {}",
-            wg_size2
+            "tex size must be divisible by {wg_size2}"
         );
 
         let mut wg_x = size_x / wg_size2;
@@ -221,8 +221,14 @@ impl TexDsq {
     }
 
     fn run(&self, src1: &Texture2d, src2: &Texture2d, dest: &Texture2d) {
-        let wg_x = dest.get_width();
-        let wg_y = dest.get_height();
+        let size_x = dest.get_width();
+        let size_y = dest.get_height();
+        assert!(
+            size_x % DSQ_WG_SIZE == 0 && size_y % DSQ_WG_SIZE == 0,
+            "texture size must be divisible by {DSQ_WG_SIZE}"
+        );
+        let wg_x = size_x / DSQ_WG_SIZE;
+        let wg_y = size_y / DSQ_WG_SIZE;
 
         self.program.set_active();
 
@@ -255,9 +261,11 @@ impl TexMse {
 
     fn run(&self, src1: &Texture2d, src2: &Texture2d) -> f32 {
         self.dsq.run(src1, src2, &self.tex_dsq);
-        // supposedly you have to divide by the total here, but we don't need to do it
-        let mse = self.fold.run(&self.tex_dsq);
-        // same here, we sum instead of calculating the average
+        let mse = vec4_div(
+            self.fold.run(&self.tex_dsq),
+            (self.tex_dsq.get_width() * self.tex_dsq.get_height()) as f32,
+        );
+        // we sum the color components to obtain a single value
         mse[0] + mse[1] + mse[2] + mse[3]
     }
 }

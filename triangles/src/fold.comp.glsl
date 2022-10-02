@@ -1,5 +1,5 @@
 #version 430
-layout (local_size_x = 16, local_size_y = 16) in;
+layout (local_size_x = 8, local_size_y = 8) in;
 
 uniform sampler2D src;
 uniform writeonly restrict image2D dest;
@@ -11,8 +11,7 @@ shared vec4 sdata[block_size];
 
 vec4 fold_op(vec4, vec4);
 
-void main()
-{
+void main() {
     ivec2 i = ivec2(2 * gl_WorkGroupSize.xy * gl_WorkGroupID.xy + gl_LocalInvocationID.xy);
     vec4 t0 = texelFetch(src, i, 0);
     vec4 t1 = texelFetch(src, i + ivec2(gl_WorkGroupSize.x, 0), 0);
@@ -21,20 +20,14 @@ void main()
     sdata[tid] = fold_op(fold_op(fold_op(t0, t1), t2), t3);
     barrier();
 
-    if (block_size >= 512) { if (tid < 256) { sdata[tid] = fold_op(sdata[tid], sdata[tid + 256]); } barrier(); }
-    if (block_size >= 256) { if (tid < 128) { sdata[tid] = fold_op(sdata[tid], sdata[tid + 128]); } barrier(); }
-    if (block_size >= 128) { if (tid < 64)  { sdata[tid] = fold_op(sdata[tid], sdata[tid +  64]); } barrier(); }
-
-    if (tid < 32)
-    {
-        if (block_size >= 64) sdata[tid] = fold_op(sdata[tid], sdata[tid + 32]);
-        if (block_size >= 32) sdata[tid] = fold_op(sdata[tid], sdata[tid + 16]);
-        if (block_size >= 16) sdata[tid] = fold_op(sdata[tid], sdata[tid + 8]);
-        if (block_size >= 8)  sdata[tid] = fold_op(sdata[tid], sdata[tid + 4]);
-        if (block_size >= 4)  sdata[tid] = fold_op(sdata[tid], sdata[tid + 2]);
-        if (block_size >= 2)  sdata[tid] = fold_op(sdata[tid], sdata[tid + 1]);
+    for (uint s = block_size/2; s > 0; s >>= 1) {
+        if (tid < s) {
+            sdata[tid] = fold_op(sdata[tid], sdata[tid + s]);
+        }
+        barrier();
     }
 
-    if (tid == 0)
+    if (tid == 0) {
         imageStore(dest, ivec2(gl_WorkGroupID.xy), sdata[0]);
+    }
 }
