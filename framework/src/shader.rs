@@ -11,7 +11,7 @@ trait ShaderStatus {
 
 fn validate_shader<T: ShaderStatus>(shader: T) -> Result<T, CString> {
     if shader.get_status() {
-        shader.get_log().map(|log| eprintln!("-- {:?}", log));
+        shader.get_log().map(|log| eprintln!("-- {log:?}"));
         Ok(shader)
     } else {
         Err(shader.get_log().unwrap_or_else(|| CString::new("unknown error").unwrap()))

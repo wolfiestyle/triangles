@@ -24,7 +24,7 @@ extern "system" fn debug_callback(
     source: GLenum, ty: GLenum, id: GLuint, severity: GLenum, length: GLsizei, message: *const GLchar, user_param: *mut GLvoid,
 ) {
     let msg = unsafe { CStr::from_ptr(message) };
-    eprintln!("debug: {:?}", msg);
+    eprintln!("debug: {msg:?}");
 }
 
 pub fn enable_debug_callback() {

@@ -309,10 +309,7 @@ fn main() {
         parser.parse_args_or_exit()
     }
 
-    println!(
-        "image: {}\ntexture size: {}\nnum triangles: {}\ndrawing every {} iters",
-        image_file, tex_size, n_tris, draw_interval
-    );
+    println!("image: {image_file}\ntexture size: {tex_size}\nnum triangles: {n_tris}\ndrawing every {draw_interval} iters");
 
     // load the reference image
     let img = image::open(image_file).unwrap();
@@ -350,7 +347,7 @@ fn main() {
     // set the background color to the average color of the image
     let avg_color = vec4_div(texmse.fold.run(&tex_img), (tex_size * tex_size) as f32);
     unsafe { gl::ClearColor(avg_color[0], avg_color[1], avg_color[2], avg_color[3]) };
-    println!("average color: {:?}", avg_color);
+    println!("average color: {avg_color:?}");
 
     // put all of the above in a struct
     let gl_state = GlState {
@@ -388,6 +385,7 @@ fn main() {
             ..
         } => {
             *cf = ControlFlow::ExitWithCode(0);
+            eprintln!();
         }
         Event::MainEventsCleared => {
             let old_state = state.mutate();
@@ -403,10 +401,7 @@ fn main() {
             let elapsed_sec = frame_time.elapsed();
             let elapsed_total = start_time.elapsed();
             if elapsed_sec.as_secs() >= 1 {
-                eprint!(
-                    "\r{} iters in {:?} ({} iters/s) error: {:?}        ",
-                    frame_total, elapsed_total, frame_count, best_mse
-                );
+                eprint!("\r{frame_total} iters in {elapsed_total:?} ({frame_count} iters/s) error: {best_mse:?}        ");
                 io::stdout().flush().unwrap();
 
                 frame_count = 0;
@@ -428,6 +423,7 @@ fn main() {
         }
         Event::LoopDestroyed => {
             if !output_file.is_empty() {
+                eprintln!("saving image to {output_file}");
                 let tex = gl_state.fbo.get_tex();
                 tex.bind_to(0);
                 let path = std::path::Path::new(&output_file);
