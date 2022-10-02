@@ -341,7 +341,7 @@ fn main() {
     .unwrap();
 
     // draw to texture setup
-    let fb_tex = Texture2d::new(tex_size, tex_size, gl::RGBA8);
+    let fb_tex = Texture2d::new(tex_size, tex_size, gl::SRGB8_ALPHA8);
     let fbo = fb_tex.into_framebuffer().unwrap();
 
     // init compute operations
@@ -431,7 +431,6 @@ fn main() {
                 let tex = gl_state.fbo.get_tex();
                 tex.bind_to(0);
                 let path = std::path::Path::new(&output_file);
-                //FIXME: image is not saved in the correct color space
                 let img_data: Vec<u8> = tex.read_data(gl::RGBA);
                 image::save_buffer(path, &img_data, tex.get_width(), tex.get_height(), image::ColorType::Rgba8).unwrap();
             }
