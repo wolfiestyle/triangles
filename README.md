@@ -23,3 +23,19 @@ Optional arguments:
                         Display the result after N iterations
   -o,--output OUTPUT    Output image filename (saved on exit)
 ```
+
+## Example output
+
+```
+image: img/Lenna.png
+texture size: 512
+num triangles: 300
+drawing every 1000 iters
+average color: [0.50554484, 0.17099285, 0.16232914, 1.0]
+1504572 iters in 411.069255484s (4252 iters/s) error: 0.010000365         
+saving image to img/Lenna_triangles.png
+```
+
+ Original                  | Triangles
+:-------------------------:|:--------------------------------------:
+![Original](img/Lenna.png) | ![Triangles](img/Lenna_triangles.png)
