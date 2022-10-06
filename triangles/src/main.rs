@@ -71,6 +71,7 @@ impl TriangleBuf {
             //unsafe{ gl::Viewport(0, 0, TEX_SIZE as i32, TEX_SIZE as i32) };
             self.draw(&gl_state);
             let val = gl_state.mse.run(&gl_state.tex_img, gl_state.fbo.get_tex());
+            Framebuffer::unbind();
             self._mse.set(Some(val));
             val
         }
