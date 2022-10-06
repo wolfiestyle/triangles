@@ -96,6 +96,14 @@ impl Program {
             Some(Uniform { loc: id, prog: self })
         }
     }
+
+    pub fn get_workgroup_size(&self) -> [u32; 3] {
+        let mut wg = [0; 3];
+        unsafe {
+            gl::GetProgramiv(self.0, gl::COMPUTE_WORK_GROUP_SIZE, wg.as_mut_ptr());
+        }
+        [wg[0] as u32, wg[1] as u32, wg[2] as u32]
+    }
 }
 
 impl ShaderStatus for Program {

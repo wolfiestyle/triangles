@@ -8,9 +8,6 @@ use std::io::{self, Write};
 use std::rc::Rc;
 use std::time::Instant;
 
-const FOLD_WG_SIZE: u32 = 8; // local_size_N from fold shader
-const DSQ_WG_SIZE: u32 = 16; // local_size_N from dsq shader
-
 // shared GL state
 struct GlState {
     tex_img: Texture2d,
@@ -153,14 +150,16 @@ impl TexFold {
         let size_x = tex_src.get_width();
         let size_y = tex_src.get_height();
 
-        let wg_size2 = FOLD_WG_SIZE * 2;
+        let wg_size = self.program.get_workgroup_size();
+        let wg_size_x = wg_size[0] * 2;
+        let wg_size_y = wg_size[1] * 2;
         assert!(
-            size_x % wg_size2 == 0 && size_y % wg_size2 == 0,
-            "tex size must be divisible by {wg_size2}"
+            size_x % wg_size_x == 0 && size_y % wg_size_y == 0,
+            "tex size must be divisible by {wg_size_x}"
         );
 
-        let mut wg_x = size_x / wg_size2;
-        let mut wg_y = size_y / wg_size2;
+        let mut wg_x = size_x / wg_size_x;
+        let mut wg_y = size_y / wg_size_y;
         let mut tex_in = tex_src;
         let mut tex_out;
 
@@ -171,9 +170,9 @@ impl TexFold {
             tex_out = self.run_compute(wg_x, wg_y, tex_in);
 
             // check if it's worth to iterate again
-            if wg_x % wg_size2 == 0 && wg_y % wg_size2 == 0 {
-                wg_x /= wg_size2;
-                wg_y /= wg_size2;
+            if wg_x % wg_size_x == 0 && wg_y % wg_size_y == 0 {
+                wg_x /= wg_size_x;
+                wg_y /= wg_size_y;
                 tex_in = &tex_out;
             } else {
                 break;
@@ -226,12 +225,13 @@ impl TexDsq {
     fn run(&self, src1: &Texture2d, src2: &Texture2d, dest: &Texture2d) {
         let size_x = dest.get_width();
         let size_y = dest.get_height();
+        let [wg_size_x, wg_size_y, _] = self.program.get_workgroup_size();
         assert!(
-            size_x % DSQ_WG_SIZE == 0 && size_y % DSQ_WG_SIZE == 0,
-            "texture size must be divisible by {DSQ_WG_SIZE}"
+            size_x % wg_size_x == 0 && size_y % wg_size_y == 0,
+            "texture size must be divisible by {wg_size_x}"
         );
-        let wg_x = size_x / DSQ_WG_SIZE;
-        let wg_y = size_y / DSQ_WG_SIZE;
+        let wg_x = size_x / wg_size_x;
+        let wg_y = size_y / wg_size_y;
 
         self.program.set_active();
 
